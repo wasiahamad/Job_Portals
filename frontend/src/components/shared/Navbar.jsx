@@ -130,15 +130,19 @@
 
 // export default Navbar;
 
-
-import React, { useState } from "react";
+import React from "react";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { Button } from "../ui/button";
+import { Avatar, AvatarImage } from "../ui/avatar";
+import { LogOut, User2 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { LogOut, Menu } from "lucide-react";
-import { setUser } from "@/redux/authSlice";
-import { toast } from "sonner";
 import axios from "axios";
 import { USER_API_END_POINT } from "@/utils/constant";
+import { setUser } from "@/redux/authSlice";
+import { toast } from "sonner";
+import { Menu } from "lucide-react";
+import { useState } from "react";
 
 const Navbar = () => {
   const { user } = useSelector((store) => store.auth);
@@ -148,7 +152,9 @@ const Navbar = () => {
 
   const logoutHandler = async () => {
     try {
-      const res = await axios.get(`${USER_API_END_POINT}/logout`, { withCredentials: true });
+      const res = await axios.get(`${USER_API_END_POINT}/logout`, {
+        withCredentials: true,
+      });
       if (res.data.success) {
         dispatch(setUser(null));
         navigate("/");
@@ -156,28 +162,95 @@ const Navbar = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error("Logout failed");
+      toast.error(error.response.data.message);
     }
   };
-
   return (
-    <nav className="bg-white shadow-md p-4 sticky top-0 w-full z-50">
-      <div className="max-w-6xl mx-auto flex justify-between items-center">
-        <Link to="/" className="text-2xl font-bold">JobPortal</Link>
-        <button className="lg:hidden" onClick={() => setMenuOpen(!menuOpen)}>
-          <Menu size={28} />
-        </button>
-        <div className={`lg:flex space-x-6 ${menuOpen ? "block" : "hidden"} lg:block absolute lg:relative top-16 lg:top-0 left-0 bg-white w-full lg:w-auto p-4 lg:p-0 shadow-lg lg:shadow-none` }>
-          <Link to="/jobs" className="block p-2 lg:inline-block">Jobs</Link>
-          <Link to="/companies" className="block p-2 lg:inline-block">Companies</Link>
-          {user ? (
-            <button onClick={logoutHandler} className="block p-2 lg:inline-block">Logout</button>
+    <div className="bg-white w-full shadow-md">
+      <div className="flex items-center justify-between mx-auto max-w-7xl h-16 px-4">
+        <div>
+          <h1 className="text-2xl font-bold">
+            Job<span className="text-[#2E86C1]">Hive</span>
+          </h1>
+        </div>
+        <div className="md:hidden">
+          <button onClick={() => setMenuOpen(!menuOpen)}>
+            <Menu size={24} />
+          </button>
+        </div>
+        <div className={`absolute md:static top-16 left-0 w-full md:w-auto bg-white md:bg-transparent shadow-md md:shadow-none p-4 md:p-0 flex flex-col md:flex-row items-center gap-5 transition-all duration-300 ${menuOpen ? "block" : "hidden md:flex"}`}>
+          <ul className="flex flex-col md:flex-row font-medium items-center gap-5">
+            {user && user.role === "recruiter" ? (
+              <>
+                <li>
+                  <Link to="/admin/companies">Companies</Link>
+                </li>
+                <li>
+                  <Link to="/admin/jobs">Jobs</Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to="/">Home</Link>
+                </li>
+                <li>
+                  <Link to="/jobs">Jobs</Link>
+                </li>
+                <li>
+                  <Link to="/browse">Browse</Link>
+                </li>
+              </>
+            )}
+          </ul>
+          {!user ? (
+            <div className="flex flex-col md:flex-row items-center gap-2">
+              <Link to="/login">
+                <Button variant="outline">Login</Button>
+              </Link>
+              <Link to="/signup">
+                <Button className="bg-[#2E86C1] hover:bg-[#2E96C3]">Signup</Button>
+              </Link>
+            </div>
           ) : (
-            <Link to="/login" className="block p-2 lg:inline-block">Login</Link>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Avatar className="cursor-pointer">
+                  <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
+                </Avatar>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="">
+                  <div className="flex gap-2 space-y-2">
+                    <Avatar className="cursor-pointer">
+                      <AvatarImage src={user?.profile?.profilePhoto} alt="@shadcn" />
+                    </Avatar>
+                    <div>
+                      <h4 className="font-medium">{user?.fullname}</h4>
+                      <p className="text-sm text-muted-foreground">{user?.profile?.bio}</p>
+                    </div>
+                  </div>
+                  <div className="flex flex-col my-2 text-gray-600">
+                    {user && user.role === "student" && (
+                      <div className="flex w-fit items-center gap-2 cursor-pointer">
+                        <User2 />
+                        <Button variant="link">
+                          <Link to="/profile">View Profile</Link>
+                        </Button>
+                      </div>
+                    )}
+                    <div className="flex w-fit items-center gap-2 cursor-pointer">
+                      <LogOut />
+                      <Button onClick={logoutHandler} variant="link">Logout</Button>
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
           )}
         </div>
       </div>
-    </nav>
+    </div>
   );
 };
 
