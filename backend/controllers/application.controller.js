@@ -177,7 +177,7 @@ export const getApplicants = async (req, res) => {
       path: "applications",
       options: { sort: { createdAt: -1 } },
       populate: {
-        path: "applicant"
+        path: "applicant",
       },
     });
     if (!job) {
@@ -245,15 +245,16 @@ export const updateStatus = async (req, res) => {
     // Find the application by ID
     const application = await Application.findOne({
       _id: applicationId,
-    }).populate("applicant")
-    .populate({
-      path: "job",
-      options: { sort: { createdAt: -1 } },
-      populate: {
-        path: "company",
+    })
+      .populate("applicant")
+      .populate({
+        path: "job",
         options: { sort: { createdAt: -1 } },
-      },
-    });
+        populate: {
+          path: "company",
+          options: { sort: { createdAt: -1 } },
+        },
+      });
     const company = application.job.company.name;
     const jobTitle = application.job.title;
 
@@ -279,18 +280,17 @@ export const updateStatus = async (req, res) => {
         "Application Accepted", // Email subject
         `Dear ${applicantName},
 
-    We are delighted to inform you that your application for the position at ${company} has been **accepted**. Congratulations on this achievement!
+        We are delighted to inform you that your application for the position at ${company} has been **accepted**. Congratulations on this achievement!
 
-    After carefully reviewing your qualifications and experience, we are confident that you will make a meaningful contribution to our team. We truly appreciate your interest in joining us and look forward to a successful collaboration.
+        After carefully reviewing your qualifications and experience, we are confident that you will make a meaningful contribution to our team. We truly appreciate your interest in joining us and look forward to a successful collaboration.
 
-    As the next step, our HR team will reach out to you with details regarding the onboarding process. Please check your email regularly for further instructions. In case you have any questions, feel free to contact us.
+        As the next step, our HR team will reach out to you with details regarding the onboarding process. Please check your email regularly for further instructions. In case you have any questions, feel free to contact us.
 
-    Once again, congratulations on your success! We are excited to welcome you to the ${company} family.
+        Once again, congratulations on your success! We are excited to welcome you to the ${company} family.
 
-    Best regards,  
-    The ${company} Team`
+        Best regards,  
+        The ${company} Team`
       );
-
     } else if (status.toLowerCase() === "rejected") {
       // Send rejection email
       await sendEmail(
@@ -298,14 +298,14 @@ export const updateStatus = async (req, res) => {
         "Application Rejected", // Email subject
         `Dear ${applicantName},
     
-    We regret to inform you that after careful consideration, your application for the position at ${company} has not been selected at this time. 
+        We regret to inform you that after careful consideration, your application for the position at ${company} has not been selected at this time. 
     
-    Please know that this decision was not a reflection of your skills or potential, but rather the result of a highly competitive selection process. We truly appreciate the time and effort you put into your application and thank you for considering ${companyName} as a place to grow your career.
+        Please know that this decision was not a reflection of your skills or potential, but rather the result of a highly competitive selection process. We truly appreciate the time and effort you put into your application and thank you for considering ${company} as a place to grow your career.
     
-    We encourage you to stay connected and apply for future opportunities that align with your skills. We wish you all the best in your professional journey.
+        We encourage you to stay connected and apply for future opportunities that align with your skills. We wish you all the best in your professional journey.
     
-    Best regards,  
-    The ${company} Team`
+        Best regards,  
+        The ${company} Team`
       );
     }
 
